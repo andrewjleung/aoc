@@ -1,5 +1,5 @@
 import os
-from solution import maxCaloriesPerElf
+from solution import maxCaloriesPerElf, caloriesOfTopThreeElves
 
 fileDir = os.path.dirname(os.path.realpath("__file__"))
 
@@ -21,12 +21,26 @@ def readInput(filename: str) -> list[list[int]]:
             else:
                 curr.append(int(line))
 
+        elves.append(curr)
+
     return elves
 
 
-def test_1():
-    assert maxCaloriesPerElf(readInput("input2.txt")) == 24000
+input1 = readInput("input_1.txt")
+mainInput = readInput("input_main.txt")
 
 
-def test_solution():
-    print(maxCaloriesPerElf(readInput("input1.txt")))
+def test_part1():
+    assert maxCaloriesPerElf(input1) == 24000
+
+
+def test_part1_solution():
+    print(maxCaloriesPerElf(mainInput))
+
+
+def test_part2():
+    assert set(caloriesOfTopThreeElves(input1)) == set([24000, 11000, 10000])
+
+
+def test_part2_solution():
+    print(sum(caloriesOfTopThreeElves(mainInput)))
