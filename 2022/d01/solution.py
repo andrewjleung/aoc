@@ -5,26 +5,24 @@ def maxCaloriesPerElf(elves: list[list[int]]) -> int:
     maxCalories = 0
 
     for elf in elves:
-        elfCalories = 0
-        for calories in elf:
-            elfCalories += calories
-        maxCalories = max(maxCalories, elfCalories)
+        maxCalories = max(maxCalories, sum(elf))
 
     return maxCalories
 
 
 def caloriesOfTopThreeElves(elves: list[list[int]]) -> list[int]:
+    if len(elves) < 3:
+        raise ValueError("Not enough elves to find the top three.")
+
     minHeap = []
 
-    for elf in elves:
-        elfCalories = 0
+    for i in range(3):
+        heappush(minHeap, sum(elves[i]))
 
-        for calories in elf:
-            elfCalories += calories
+    for i in range(3, len(elves)):
+        elfCalories = sum(elves[i])
 
-        if len(minHeap) < 3:
-            heappush(minHeap, elfCalories)
-        elif len(minHeap) >= 3 and minHeap[0] < elfCalories:
+        if len(minHeap) >= 3 and minHeap[0] < elfCalories:
             heappop(minHeap)
             heappush(minHeap, elfCalories)
 
