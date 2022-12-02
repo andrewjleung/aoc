@@ -2,12 +2,10 @@ from heapq import heappush, heappop
 
 
 def maxCaloriesPerElf(elves: list[list[int]]) -> int:
-    maxCalories = 0
+    if len(elves) < 1:
+        raise ValueError("No elves.")
 
-    for elf in elves:
-        maxCalories = max(maxCalories, sum(elf))
-
-    return maxCalories
+    return max([sum(elf) for elf in elves])
 
 
 def caloriesOfTopThreeElves(elves: list[list[int]]) -> list[int]:
