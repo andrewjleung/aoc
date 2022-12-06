@@ -1,31 +1,12 @@
-# First column
-# A - Rock
-# B - Paper
-# C - Scissors
-
-# Second column
-# X - Rock
-# Y - Paper
-# Z - Scissors
-
-# The strategy is not intended to win every time, but to inconspicuously win the
-# tournament with the most points.
-
-# Score is the sum of scores for each round.
-# The score fora single round is the score for the shape you selected:
-# Rock - 1
-# Paper - 2
-# Scissors - 3
-# Plus the score for the outcome of the round:
-# Loss - 0
-# Draw - 3
-# Win - 6
-
+# Mapping to translate input encoded moves to a common representation (R, P, S).
 TRANSLATE_MOVES = {"X": "R", "Y": "P", "Z": "S", "A": "R", "B": "P", "C": "S"}
 SHAPE_SCORES = {"R": 1, "P": 2, "S": 3}
-BEATS = {"R": "S", "P": "R", "S": "P"}
-LOSES = {loser: winner for winner, loser in BEATS.items()}
 
+# Inverse mappings of what shapes beat/lose to other shapes.
+BEATS = {"R": "S", "P": "R", "S": "P"}
+LOSES_TO = {loser: winner for winner, loser in BEATS.items()}
+
+# Point values for drawing/winning, losing gets no points.
 DRAW = 3
 WIN = 6
 
@@ -54,13 +35,15 @@ def calculateMoveStrategyScore(strategy: list[tuple[str, str]]) -> int:
     )
 
 
+# Determine the shape to play in order to achieve the given result depending on
+# what they opponent plays.
 def getShapeToPlay(theyPlay: str, result: str) -> str:
     if result == "X":
         return BEATS[theyPlay]
     elif result == "Y":
         return theyPlay
     else:
-        return LOSES[theyPlay]
+        return LOSES_TO[theyPlay]
 
 
 # Calculate the score of the given strategy using the second column as what
