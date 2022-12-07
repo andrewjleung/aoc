@@ -1,6 +1,10 @@
 import os
 from collections import deque
-from solution import rearrangeAndGetTopOfStacks
+from solution import (
+    rearrangeAndGetTopOfStacks,
+    applyCrateMover9000Move,
+    applyCrateMover9001Move,
+)
 
 fileDir = os.path.dirname(os.path.realpath("__file__"))
 
@@ -30,6 +34,7 @@ def parseMoveLine(line: str) -> tuple[int, int, int]:
     return (int(tokens[1]), int(tokens[3]), int(tokens[5]))
 
 
+# Cursed input parsing...
 def readInput(filename: str) -> tuple[list[list[str]], list[tuple[int, int, int]]]:
     stackLines = []
     moves = []
@@ -90,10 +95,22 @@ def test_parse():
 def test_part_1_input_1():
     input1 = readInput(getAbsolutePath("input_1.txt"))
     stacks, moves = input1
-    assert rearrangeAndGetTopOfStacks(stacks, moves) == "CMZ"
+    assert rearrangeAndGetTopOfStacks(stacks, moves, applyCrateMover9000Move) == "CMZ"
 
 
 def test_part_1_solution():
     mainInput = readInput(getAbsolutePath("input_main.txt"))
     stacks, moves = mainInput
-    print(rearrangeAndGetTopOfStacks(stacks, moves))
+    print(rearrangeAndGetTopOfStacks(stacks, moves, applyCrateMover9000Move))
+
+
+def test_part_2_input_1():
+    input1 = readInput(getAbsolutePath("input_1.txt"))
+    stacks, moves = input1
+    assert rearrangeAndGetTopOfStacks(stacks, moves, applyCrateMover9001Move) == "MCD"
+
+
+def test_part_2_solution():
+    mainInput = readInput(getAbsolutePath("input_main.txt"))
+    stacks, moves = mainInput
+    print(rearrangeAndGetTopOfStacks(stacks, moves, applyCrateMover9001Move))
