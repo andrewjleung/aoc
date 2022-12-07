@@ -26,7 +26,7 @@ def getRucksackComponents(rucksack: str) -> tuple[str, str]:
 # Determine the priority number of a given item type.
 def getItemPriority(itemType: str) -> int:
     if itemType.isupper():
-        return ord(itemType) - ord("A") + 27
+        return ord(itemType) - ord("A") + ord("z") - ord("a") + 2
 
     return ord(itemType) - ord("a") + 1
 
