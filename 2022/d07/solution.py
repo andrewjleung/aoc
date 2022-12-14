@@ -102,7 +102,6 @@ def isFile(line: str) -> bool:
 
 def parseDirectory(line: str, location: list[Directory]):
     name = line.split(" ")[1]
-    print(location)
     cwd = location[-1]
     cwd.directories[name] = Directory()
 
