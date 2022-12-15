@@ -1,4 +1,13 @@
-from solution import readInput, countVisibleTrees, getMaxScenicScore
+from solution import (
+    readInput,
+    countVisibleTrees,
+    getMaxScenicScore,
+    getNextGTEElement,
+    getRightIterator,
+    getLeftIterator,
+    getDownIterator,
+    getUpIterator,
+)
 
 input1 = readInput("input_1.txt")
 mainInput = readInput("input_main.txt")
@@ -20,6 +29,13 @@ def test_part_1_input_1():
 
 def test_part_1_solution():
     print(countVisibleTrees(mainInput))
+
+
+def test_getNextGTEElements():
+    assert getNextGTEElement(getRightIterator(input1, 0)) == [2, 1, 1, 1, 0]
+    assert getNextGTEElement(getLeftIterator(input1, 0)) == [1, 3, 2, 1, 0]
+    assert getNextGTEElement(getDownIterator(input1, 0)) == [2, 1, 2, 1, 0]
+    assert getNextGTEElement(getUpIterator(input1, 0)) == [1, 1, 2, 1, 0]
 
 
 def test_part_2_input_1():

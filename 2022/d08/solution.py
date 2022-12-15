@@ -1,6 +1,7 @@
 import os
 import math
 from heapq import heappush, heappop
+from collections.abc import Iterator
 
 """
 PART 1
@@ -44,50 +45,22 @@ counted.
 """
 PART 2
 
-The viewing distance from a tree in a certain direction is the minimum of its 
-distance to the edge of the grid or the first tree that is the same height or
-taller than the tree itself.
+The intuition here is that this problem maps to finding the next greatest 
+element in a sequence of numbers. Traversing a row/column in a certain 
+direction, a viewing distance is just the difference in position between an 
+element and its next greater than or equal element in the array, which can be 
+found in linear time with respect to that sequence for all elements using a
+stack.
 
-A scenic score for a tree is then the product of its viewing distance in all 
-four directions.
+By using this algorithm, you essentially just traverse each row and column 
+a total of three times. The first two times are to find the viewing distances 
+for elements in the forward and backward directions, then the last time is to 
+create the scenic score by multiplying the results together.
 
-Find the highest scenic score of any tree.
+This yields a linear time algorithm to find scenic scores.
 
-One intuition is that we can do something similar to the previous part by 
-splitting the examining of each direction into a separate pass. Instead of
-keeping track of visibility however, we keep track of the current scenic score
-product for each cell. We then update the scenic score in each direction row by
-row, column by column in both directions.
 
-To leverage overlapping computation, we can search for the first blocking tree
-for each tree in the same row/column simultaneously. That is, to determine the 
-first blocking tree to the right, we iterate by rows from left to right. 
-
-Take the row `30373`.
-
-Starting out you see the leftmost 3. We need to then find the first number that
-is greater than or equal to 3, so we remember that this position's scenic score
-needs to be updated as soon as we see any such number.
-
-We then continue on to 0. We see that there are no numbers which are less than 
-or equal to 0 which still haven't had their viewing distance determined for this
-direction, so we remember that this position's scenic score needs to be updated
-as soon as we see any number that is 0 or greater.
-
-Next we see another 3. We see that we have two numbers which are less than or 
-equal to 3, so we update the scenic scores for each of those numbers accordingly
-and so on.
-
-What data structure can we use to keep track of what needs to have its viewing
-distance determined still? Well, if we can always get the smallest tree that
-hasn't had its viewing distance determined, then we can always find all smaller 
-trees than the current tree. 
-
-A data structure that lends itself to this is a heap! This makes the complexity
-for determining scenic scores O(mn log n + nm log m). This is opposed to a
-brute force strategy calculating for each cell individually which would have a 
-complexity of O((n^2 * m) + (m^2 * n)). This also increases space complexity to
-O(max(n, m)).
+Part 1 can also be solved with this algorithm...
 """
 
 fileDir = os.path.dirname(os.path.realpath("__file__"))
@@ -153,72 +126,65 @@ def countVisibleTrees(grid: list[list[int]]) -> int:
     return count
 
 
+def getRightIterator(matrix: list[list[int]], row: int):
+    return matrix[row]
+
+
+def getLeftIterator(matrix: list[list[int]], row: int):
+    for col in range(len(matrix[row]) - 1, -1, -1):
+        yield matrix[row][col]
+
+
+def getDownIterator(matrix: list[list[int]], col: int):
+    for row in range(len(matrix)):
+        yield matrix[row][col]
+
+
+def getUpIterator(matrix: list[list[int]], col: int):
+    for row in range(len(matrix) - 1, -1, -1):
+        yield matrix[row][col]
+
+
+# For each element in the given iterator, find the distance between it and its
+# next greater than or equal element in the iterator or the end of the elements.
+def getNextGTEElement(iterator: Iterator[int]) -> list[int]:
+    arr = list(iterator)
+    stack = []
+    result = [-1 for _ in range(len(arr))]
+
+    for i, num in enumerate(arr):
+        while len(stack) > 0 and num >= stack[-1][0]:
+            _, j = stack.pop()
+            result[j] = i - j
+
+        stack.append((num, i))
+
+    while len(stack) > 0:
+        _, j = stack.pop()
+        result[j] = len(arr) - 1 - j
+
+    return result
+
+
 def calculateScenicScores(grid: list[list[int]]) -> list[list[int]]:
     rows, cols = len(grid), len(grid[0])
-    scenicScores = [
-        [
-            1 if col not in [0, cols - 1] and row not in [0, rows - 1] else 0
-            for col in range(cols)
-        ]
-        for row in range(rows)
-    ]
-    minHeap = []
+    scenicScores = [[1 for _ in row] for row in grid]
 
-    def updateScenicScores(row: int, col: int, horizontal: bool):
-        nonlocal minHeap, scenicScores
-        tree = grid[row][col]
+    # Multiply scenic scores by horizontal viewing distances.
+    for row in range(rows):
+        rightScores = getNextGTEElement(getRightIterator(grid, row))
+        leftScores = getNextGTEElement(getLeftIterator(grid, row))
 
-        # Get all trees which are shorter or the same height of this
-        # tree and update their scenic scores.
-        while len(minHeap) > 0 and minHeap[0][0] <= tree:
-            blockedTree, i = heappop(minHeap)
+        for col in range(len(rightScores)):
+            scenicScores[row][col] *= rightScores[col] * leftScores[cols - 1 - col]
 
-            if horizontal:
-                scenicScores[row][i] *= abs(col - i)
-            else:
-                scenicScores[i][col] *= abs(row - i)
+    # Multiply scenic scores by vertical viewing distances.
+    for col in range(cols):
+        downScores = getNextGTEElement(getDownIterator(grid, col))
+        upScores = getNextGTEElement(getUpIterator(grid, col))
 
-        if horizontal:
-            heappush(minHeap, (tree, col))
-        else:
-            heappush(minHeap, (tree, row))
-
-    # Update scenic scores in the right direction.
-    for row in range(1, rows - 1):
-        for col in range(1, cols - 1):
-            updateScenicScores(row, col, True)
-
-        # TODO: Lots of repetition here... maybe this solution isn't that worth it...
-        while len(minHeap) > 0:
-            blockedTree, i = heappop(minHeap)
-            scenicScores[row][i] *= abs(cols - 1 - i)
-
-    # Update scenic scores in the left direction.
-    for row in range(1, rows - 1):
-        for col in range(cols - 2, -1, -1):
-            updateScenicScores(row, col, True)
-
-        while len(minHeap) > 0:
-            blockedTree, i = heappop(minHeap)
-            scenicScores[row][i] *= i
-
-    # Update scenic scores in the down direction.
-    for col in range(1, cols - 1):
-        for row in range(1, rows - 1):
-            updateScenicScores(row, col, False)
-
-        while len(minHeap) > 0:
-            blockedTree, i = heappop(minHeap)
-            scenicScores[i][col] *= abs(rows - 1 - i)
-
-    # Update scenic scores in the up direction.
-    for col in range(1, cols - 1):
-        for row in range(rows - 2, -1, -1):
-            updateScenicScores(row, col, False)
-
-        while len(minHeap) > 0:
-            blockedTree, i = heappop(minHeap)
-            scenicScores[i][col] *= i
+        for row in range(len(downScores)):
+            scenicScores[row][col] *= downScores[row] * upScores[rows - 1 - row]
 
     return scenicScores
 
