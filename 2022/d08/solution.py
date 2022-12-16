@@ -59,7 +59,6 @@ create the scenic score by multiplying the results together.
 
 This yields a linear time algorithm to find scenic scores.
 
-
 Part 1 can also be solved with this algorithm...
 """
 
@@ -148,20 +147,26 @@ def getUpIterator(matrix: list[list[int]], col: int):
 # For each element in the given iterator, find the distance between it and its
 # next greater than or equal element in the iterator or the end of the elements.
 def getNextGTEElement(iterator: Iterator[int]) -> list[int]:
-    arr = list(iterator)
     stack = []
-    result = [-1 for _ in range(len(arr))]
+    result = []
 
-    for i, num in enumerate(arr):
+    # Try to find the next GTE element for each element in the sequence.
+    i = 0
+    for num in iterator:
         while len(stack) > 0 and num >= stack[-1][0]:
             _, j = stack.pop()
             result[j] = i - j
 
         stack.append((num, i))
+        result.append(-1)
+        i += 1
 
+    # Find the distance from the end of the sequence for all remaining elements
+    # which don't have a next GTE element. At this point, `i` is the length of
+    # the sequence.
     while len(stack) > 0:
         _, j = stack.pop()
-        result[j] = len(arr) - 1 - j
+        result[j] = i - 1 - j
 
     return result
 
