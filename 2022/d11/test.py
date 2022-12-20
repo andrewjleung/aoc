@@ -6,6 +6,7 @@ from solution import (
     getMonkeyBusinessAfterTwentyRounds,
 )
 from collections import deque
+import logging
 
 input1 = readInput("input_1.txt")
 mainInput = readInput("input_main.txt")
@@ -34,3 +35,7 @@ def test_read_input():
 
 def test_part_1_input_1():
     assert getMonkeyBusinessAfterTwentyRounds(input1) == 10605
+
+
+def test_part_1_solution():
+    logging.info(getMonkeyBusinessAfterTwentyRounds(mainInput))
