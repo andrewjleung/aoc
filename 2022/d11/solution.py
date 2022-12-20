@@ -31,27 +31,23 @@ return the monkey business after 20 rounds.
 
 @dataclass
 class MonkeyOperation:
-    left: str
     op: str
     right: str
 
-    def __substitute__(self, operand: str, old: int) -> int:
-        if operand == "old":
+    def __substitute__(self, right: str, old: int) -> int:
+        if right == "old":
             return old
 
-        return int(operand)
+        return int(right)
 
     def execute(self, old: int) -> int:
-        left = self.__substitute__(self.left, old)
         right = self.__substitute__(self.right, old)
         op = self.op
 
         if op == "+":
-            return left + right
-        elif op == "-":
-            return left - right
+            return old + right
         elif op == "*":
-            return left * right
+            return old * right
         else:
             raise ValueError(f"Unrecognized operator: {op}")
 
@@ -74,24 +70,6 @@ class Monkey:
     items: Deque[int]
     operation: MonkeyOperation
     test: MonkeyTest
-    inspections: int = 0
-
-    def __inspect__(self) -> None:
-        self.items[0] = self.operation.execute(self.items[0])
-        self.items[0] //= 3
-        self.inspections += 1
-
-    def __test__(self) -> int:
-        return self.test.run(self.items[0])
-
-    def __throw_to__(self, monkeys: list["Monkey"], num: int) -> None:
-        item = self.items.popleft()
-        monkeys[num].items.append(item)
-
-    def doTurn(self, monkeys: list["Monkey"]) -> None:
-        while len(self.items) > 0:
-            self.__inspect__()
-            self.__throw_to__(monkeys, self.__test__())
 
 
 fileDir = os.path.dirname(os.path.realpath("__file__"))
@@ -117,8 +95,8 @@ def readInput(filename: str) -> list[Monkey]:
 
             startingItems = [int(num) for num in buffer[1].split(": ")[1].split(", ")]
 
-            opLeft, op, opRight = buffer[2].split(" = ")[1].split(" ")
-            operation = MonkeyOperation(opLeft, op, opRight)
+            _, op, opRight = buffer[2].split(" = ")[1].split(" ")
+            operation = MonkeyOperation(op, opRight)
 
             testDivisor = int(buffer[3].split(" ")[-1])
             testTrueDestination = int(buffer[4].split(" ")[-1])
@@ -131,22 +109,58 @@ def readInput(filename: str) -> list[Monkey]:
     return monkeys
 
 
-def getMonkeyBusinessAfterTwentyRounds(monkeys: list[Monkey]) -> int:
-    # Run 20 rounds.
-    for _ in range(20):
-        for monkey in monkeys:
-            monkey.doTurn(monkeys)
+@dataclass
+class GetMonkeyBusiness:
+    monkeys: list[Monkey]
+    managedWorry: bool
 
-    # Find the monkeys with the top two number of inspections and return the
-    # product (the monkey business of rounds).
-    topMonkey = monkeys[0].inspections
-    secondMonkey = None
+    def __post_init__(self):
+        self.inspections = [0 for _ in range(len(self.monkeys))]
+        self.allDivisorsProduct = 1
 
-    for i in range(1, len(monkeys)):
-        monkey = monkeys[i]
+        for monkey in self.monkeys:
+            self.allDivisorsProduct *= monkey.test.divisor
 
-        if monkey.inspections >= topMonkey:
-            secondMonkey = topMonkey
-            topMonkey = monkey.inspections
+    def __inspect__(self, monkeyId: int) -> None:
+        monkey = self.monkeys[monkeyId]
+        monkey.items[0] = monkey.operation.execute(monkey.items[0])
 
-    return topMonkey * secondMonkey
+        if self.managedWorry:
+            monkey.items[0] //= 3
+        else:
+            # We want to make the number smaller while retaining whether or not
+            # it is divisible by the divisor of any monkey that may test it in
+            # the future.
+            monkey.items[0] = monkey.items[0] % self.allDivisorsProduct
+
+        self.inspections[monkeyId] += 1
+
+    def __test__(self, monkeyId: int) -> int:
+        monkey = self.monkeys[monkeyId]
+        return monkey.test.run(monkey.items[0])
+
+    def __throw__(self, thrower: int, receiver: int) -> None:
+        thrower, receiver = self.monkeys[thrower], self.monkeys[receiver]
+        item = thrower.items.popleft()
+        receiver.items.append(item)
+
+    def __doTurn__(self, monkeyId: int) -> None:
+        monkey = self.monkeys[monkeyId]
+
+        while len(monkey.items) > 0:
+            self.__inspect__(monkeyId)
+            self.__throw__(monkeyId, self.__test__(monkeyId))
+
+    def runRounds(self, rounds: int) -> int:
+        # Run x rounds.
+        for _ in range(rounds):
+            for i in range(len(self.monkeys)):
+                self.__doTurn__(i)
+
+        # Find the monkeys with the top two number of inspections and return the
+        # product (the monkey business of rounds).
+        firstMax = max(self.inspections)
+        self.inspections.remove(firstMax)
+        secondMax = max(self.inspections)
+
+        return firstMax * secondMax
