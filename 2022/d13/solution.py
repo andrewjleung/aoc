@@ -15,9 +15,14 @@ You need to determine how many pairs of packets are in the right order.
 Ordering is determined by comparing same-index pairs within both packets,
 abiding by the following rules:
 
-1. If both values are integers, the lower integer should come first.
-2. If both values are lists, recursively compare their elements. In addition, 
-   the left list should be shorter or the same length as the right list.
+1. If both values are integers, the lower integer should come first. If they are
+   the same, you need to keep examining the input to break the tie. If the  
+   higher integer comes first, then they are out of order.
+2. If both values are lists, recursively compare their elements. As soon as any
+   comparison yields an actual ordering, return that. Otherwise, if no ordering
+   can be determined from their  elements, if the left value is shorter than the
+   right, it is in order. If the right value is shorter than the left, it is out
+   of order. otherwise, they are tied. 
 3. If one value is a list and the other is an integer, recursively compare them
    as a list and a singleton list.
    
@@ -102,5 +107,35 @@ def readInput(filename: str):
     return pairs
 
 
-def sumIndicesOfCorrectlyOrderedPairs(pairs) -> int:
+def compare(left, right) -> int:
+    if isinstance(left, int) and isinstance(right, int):
+        return left - right
+
+    if isinstance(left, int):
+        left = [left]
+    elif isinstance(right, int):
+        right = [right]
+
+    for l, r in zip(left, right):
+        comparison = compare(l, r)
+
+        if comparison != 0:
+            return comparison
+
+    if len(left) < len(right):
+        return -1
+
+    if len(right) < len(left):
+        return 1
+
     return 0
+
+
+def sumIndicesOfCorrectlyOrderedPairs(pairs) -> int:
+    result = 0
+
+    for i, (leftPacket, rightPacket) in enumerate(pairs):
+        if compare(leftPacket, rightPacket) < 0:
+            result += i + 1
+
+    return result

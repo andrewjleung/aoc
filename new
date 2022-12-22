@@ -79,19 +79,11 @@ def test_read_input():
     assert False
     
 
-def test_part_1_input_1():
+def test_part_1():
     assert False
     
 
-def test_part_1_solution():
-    assert False
-    
-
-def test_part_2_input_1():
-    assert False
-    
-
-def test_part_2_solution():
+def test_part_2():
     assert False
 """
     )

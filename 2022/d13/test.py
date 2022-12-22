@@ -1,8 +1,8 @@
-from solution import readInput, sumIndicesOfCorrectlyOrderedPairs
+from solution import readInput, sumIndicesOfCorrectlyOrderedPairs, compare
 import logging
 
 input1 = readInput("input_1.txt")
-# mainInput = readInput("input_main.txt")
+mainInput = readInput("input_main.txt")
 
 
 def test_read_input():
@@ -18,12 +18,31 @@ def test_read_input():
     ]
 
 
-# def test_part_1_input_1():
-#     assert sumIndicesOfCorrectlyOrderedPairs(input1) == 13
+def test_compare():
+    assert compare(1, 2) < 0
+    assert compare(0, 0) == 0
+    assert compare(2, 1) > 0
+
+    assert compare([1, 1, 3, 1, 1], [1, 1, 5, 1, 1]) < 0
+    assert compare([1, 1, 5, 1, 1], [1, 1, 3, 1, 1]) > 0
+    assert compare([1, 1, 3, 1, 1], [1, 1, 3, 1, 1]) == 0
+
+    assert compare([1, 1, 1], [1, 1]) > 0
+    assert compare([1, 1], [1, 1, 1]) < 0
+
+    assert compare([3, 4, 5], 2) > 0
+    assert compare([3, 4, 5], 4) < 0
+
+    assert compare(2, []) > 0
+    assert compare(2, [3]) < 0
 
 
-# def test_part_1_solution():
-#     logging.info(sumIndicesOfCorrectlyOrderedPairs(mainInput))
+def test_part_1_input_1():
+    assert sumIndicesOfCorrectlyOrderedPairs(input1) == 13
+
+
+def test_part_1_solution():
+    logging.info(sumIndicesOfCorrectlyOrderedPairs(mainInput))
 
 
 # def test_part_2_input_1():
