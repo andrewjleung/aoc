@@ -1,6 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass
+from functools import cmp_to_key
 
 """
 PART 1
@@ -33,7 +34,12 @@ right order.
 """
 PART 2
 
-...
+From part 1, you ideally should have needed to encapsulate the logic behind
+ordering packets into an unambiguous comparator.
+
+After adding in a couple of "divider packets," sort all the packets then return
+the decoder key which is defined as the product of the indices of the two 
+divider packets after sorting.
 """
 
 fileDir = os.path.dirname(os.path.realpath("__file__"))
@@ -89,22 +95,16 @@ def parseList(string: str):
 
 
 def readInput(filename: str):
-    buffer = []
-    pairs = []
+    packets = []
 
     with open(getAbsolutePath(filename)) as f:
         for line in f:
             if line == "\n":
                 continue
 
-            buffer.append(line.strip())
+            packets.append(parseList(line.strip()))
 
-            if len(buffer) >= 2:
-                # Parse both packets.
-                pairs.append(tuple([parseList(line) for line in buffer]))
-                buffer.clear()
-
-    return pairs
+    return packets
 
 
 def compare(left, right) -> int:
@@ -131,7 +131,8 @@ def compare(left, right) -> int:
     return 0
 
 
-def sumIndicesOfCorrectlyOrderedPairs(pairs) -> int:
+def sumIndicesOfCorrectlyOrderedPairs(packets) -> int:
+    pairs = [(packets[i], packets[i + 1]) for i in range(0, len(packets), 2)]
     result = 0
 
     for i, (leftPacket, rightPacket) in enumerate(pairs):
@@ -139,3 +140,19 @@ def sumIndicesOfCorrectlyOrderedPairs(pairs) -> int:
             result += i + 1
 
     return result
+
+
+DIVIDER_PACKETS = [[[2]], [[6]]]
+
+
+def findDecoderKey(packets) -> int:
+    packets.extend(DIVIDER_PACKETS)
+    sortedPackets = sorted(packets, key=cmp_to_key(compare))
+
+    decoderKey = 1
+
+    for i, packet in enumerate(sortedPackets):
+        if packet in DIVIDER_PACKETS:
+            decoderKey *= i + 1
+
+    return decoderKey
