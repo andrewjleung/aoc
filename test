@@ -1,0 +1,3 @@
+#!/bin/bash
+
+pytest -rP --log-cli-level=INFO $1

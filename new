@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+import sys
+import os
+import fnmatch
+
+NUM_AOC_DAYS = 25
+
+if len(sys.argv) < 2:
+    print("Missing year argument. Please specify what year you wish to work on.")
+    sys.exit(1)
+
+DIRECTORY = sys.argv[1]
+
+# Check that the specified year has a directory already made.
+matches = [file for file in os.listdir(".") if fnmatch.fnmatch(file, DIRECTORY)]
+if len(matches) < 1:
+    print(f"No directory found for year {DIRECTORY}.")
+    sys.exit(1)
+
+os.chdir(f"./{DIRECTORY}")
+
+# Find the latest day completed within this year.
+lastDay = int(sorted(os.listdir(f"./"))[-1][1:])
+
+if lastDay >= NUM_AOC_DAYS:
+    print("No more days to complete for this year.")
+    sys.exit(1)
+
+# Create a skeleton for the new day.
+newDir = f"d{lastDay + 1}"
+os.mkdir(f"./{newDir}")
+os.chdir(f"./{newDir}")
+
+open("input_1.txt", "w").close()
+open("input_main.txt", "w").close()
+
+with open("solution.py", "w") as f:
+    f.write(
+        f"""
+import logging
+import os
+from dataclasses import dataclass
+
+\"\"\"
+PART 1
+
+...
+\"\"\"
+
+\"\"\"
+PART 2
+
+...
+\"\"\"
+
+fileDir = os.path.dirname(os.path.realpath(\"__file__\"))
+
+def getAbsolutePath(filename: str):
+    return os.path.join(fileDir, \"{DIRECTORY}/{newDir}\", filename)
+    
+def readInput(filename: str):
+    with open(getAbsolutePath(filename)) as f:
+        for line in f:
+            pass
+"""
+    )
+
+with open("test.py", "w") as f:
+    f.write(
+        """
+from solution import readInput
+import logging
+
+input1 = readInput(\"input_1.txt\")
+mainInput = readInput(\"input_main.txt\")
+
+
+def test_read_input():
+    assert False
+    
+
+def test_part_1_input_1():
+    assert False
+    
+
+def test_part_1_solution():
+    assert False
+    
+
+def test_part_2_input_1():
+    assert False
+    
+
+def test_part_2_solution():
+    assert False
+"""
+    )
