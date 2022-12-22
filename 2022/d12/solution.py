@@ -1,5 +1,7 @@
 import os
 from collections import deque
+from typing import Callable
+import logging
 
 """
 PART 1
@@ -31,6 +33,14 @@ def readInput(filename: str) -> list[str]:
 DIRECTIONS = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
 
+def find(heightmap: list[str], target: str) -> tuple[int, int]:
+    rows, cols = len(heightmap), len(heightmap[0])
+    for row in range(rows):
+        for col in range(cols):
+            if heightmap[row][col] == target:
+                return (row, col)
+
+
 def getElevationValue(elevation: str) -> int:
     if elevation == "S":
         return ord("a")
@@ -48,35 +58,22 @@ def canVisitElevation(currentElevation: str, destinationElevation: str) -> bool:
     )
 
 
-def shortestPathToSignal(heightmap: list[str]) -> int:
-    # This is just an unweighted directed graph. We can do a BFS taking into
-    # account cycles and not traversing nodes that have already been traversed.
-    # The first path to reach the signal will automatically be the shortest
-    # path. We just need to keep track of the current breadth to return that
-    # once it is found.
+def BFS(
+    heightmap: list[str],
+    start: tuple[int, int],
+    destination: str,
+    canVisit: Callable[[str, str], bool],
+) -> int:
     rows, cols = len(heightmap), len(heightmap[0])
-
-    # Find the location of the starting point, `S`.
-    S = None
-    for row in range(rows):
-        for col in range(cols):
-            if heightmap[row][col] == "S":
-                S = (row, col)
-                break
-
-        if S is not None:
-            break
-
-    # BFS from the starting point.
-    visited = set([S])
+    visited = set([start])
     breadth = 0
-    toVisit = deque([S])
+    toVisit = deque([start])
 
     while len(toVisit) > 0:
         for _ in range(len(toVisit)):
             row, col = toVisit.popleft()
 
-            if heightmap[row][col] == "E":
+            if heightmap[row][col] in destination:
                 return breadth
 
             for xDiff, yDiff in DIRECTIONS:
@@ -88,9 +85,7 @@ def shortestPathToSignal(heightmap: list[str]) -> int:
                     continue
                 if (newRow, newCol) in visited:
                     continue
-                if not canVisitElevation(
-                    heightmap[row][col], heightmap[newRow][newCol]
-                ):
+                if not canVisit(heightmap[row][col], heightmap[newRow][newCol]):
                     continue
 
                 visited.add((newRow, newCol))
@@ -100,3 +95,31 @@ def shortestPathToSignal(heightmap: list[str]) -> int:
 
     # Couldn't reach the signal.
     return -1
+
+
+def shortestPathToSignal(heightmap: list[str]) -> int:
+    # This is just an unweighted directed graph. We can do a BFS taking into
+    # account cycles and not traversing nodes that have already been traversed.
+    # The first path to reach the signal will automatically be the shortest
+    # path. We just need to keep track of the current breadth to return that
+    # once it is found.
+    rows, cols = len(heightmap), len(heightmap[0])
+
+    # Find the location of the starting point, `S`.
+    S = find(heightmap, "S")
+
+    if S is None:
+        return -1
+
+    # BFS from the starting point.
+    return BFS(heightmap, S, "E", canVisitElevation)
+
+
+def shortestPathFromAtoE(heightmap: list[str]) -> int:
+    # Instead of just searching from every elevation `a` cell to find `E`, we
+    # can save effort by instead working backwards from `E` to find the nearest
+    # elevation `a`, making sure to take into account the rules for moving from
+    # cell to cell are now reversed.
+    E = find(heightmap, "E")
+
+    return BFS(heightmap, E, "aS", lambda u, v: canVisitElevation(v, u))
