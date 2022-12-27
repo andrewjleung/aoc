@@ -43,6 +43,11 @@ class Sensor:
     position: Position
     beacon: Position
 
+    def __post_init__(self):
+        x1, y1 = self.position.x, self.position.y
+        x2, y2 = self.beacon.x, self.beacon.y
+        self.radius = abs(x1 - x2) + abs(y1 - y2)
+
 
 fileDir = os.path.dirname(os.path.realpath("__file__"))
 
@@ -68,27 +73,19 @@ def readInput(filename: str) -> list[Sensor]:
     return sensors
 
 
-def manhattanDist(position1: Position, position2: Position) -> int:
-    x1, y1 = position1.x, position1.y
-    x2, y2 = position2.x, position2.y
-    return abs(x1 - x2) + abs(y1 - y2)
-
-
 # Return an inclusive range of x values at which the given sensor overlaps
 # the desired row. Return `None` if there is no overlap.
 def getSensorRowOverlap(sensor: Sensor, row: int) -> Optional[tuple[int, int]]:
-    radius = manhattanDist(sensor.position, sensor.beacon)
-
     # Normalize the desired row to be below the sensor (greater y). The
     # relative distance between the sensor and the row is preserved.
     if row < sensor.position.y:
         row = sensor.position.y + (sensor.position.y - row)
 
-    if row > sensor.position.y + radius:
+    if row > sensor.position.y + sensor.radius:
         return None
 
     # Compute the half-length of the overlap range.
-    halfLength = sensor.position.y + radius - row
+    halfLength = sensor.position.y + sensor.radius - row
 
     # The overlap range is centered on the `x` coordinate of the sensor.
     # The amount that it extends out in both directions horizontally is
@@ -124,8 +121,11 @@ def findPositionsWithoutBeacons(
     # Get overlap `x` intervals for all sensors.
     # These intervals correspond to ranges of `x` values for each sensor which
     # overlap with the given row. These may overlap at this point.
-    intervals = [getSensorRowOverlap(sensor, row) for sensor in sensors]
-    intervals = [interval for interval in intervals if interval is not None]
+    intervals = [
+        interval
+        for interval in [getSensorRowOverlap(sensor, row) for sensor in sensors]
+        if interval is not None
+    ]
 
     if len(intervals) < 1:
         return 0
@@ -166,6 +166,20 @@ def countPositionsWithoutBeacons(sensors: list[Sensor], row: int) -> int:
         sum([end - start + 1 for start, end in intervalsWithoutBeacons])
         - numBeaconsOnRow
     )
+
+
+"""
+TODO: There's a cool way to do this involving diagonal coordinates and finding
+where each sensor's "diamond" intersects/touches. This is likely much faster
+than combing the entire search space. Here are some thoughts:
+
+- You could for each sensor, walk the edges until the point is found. This
+  leverages the fact that the gap must be at the edge of a sensor's range.
+
+- You could find all the points at which the sensor's perimeters + 1 and the
+  edges of the grid intersect, filter those based upon the bounds, then check
+  if they contain a beacon.
+"""
 
 
 def findDistressBeacon(
